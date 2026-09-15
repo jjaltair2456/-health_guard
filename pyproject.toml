@@ -1,2 +1,21 @@
+[project]
+name = "health-guard"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+"asgiref==3.12.1",
+"dash==4.4.1",
+"dash-bootstrap-components==2.0.4",
+"dj-database-url==3.1.2",
+"Django==6.1.1",
+"django-plotly-dash==2.5.1",
+"django-widget-tweaks==1.5.0",
+"gunicorn==26.2.0",
+"pandas==2.2.2",
+"psycopg2-binary==2.9.13",
+"python-dotenv==1.2.3",
+"whitenoise==6.12.0",
+]
+
 [tool.vercel]
 entrypoint = "health_guard.wsgi:application"
