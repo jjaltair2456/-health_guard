@@ -20,3 +20,7 @@ dependencies = [
 
 [tool.vercel]
 entrypoint = "health_guard.wsgi:application"
+
+[[tool.vercel.routes]]
+src = "/(.*)"
+dest = "health_guard.wsgi:application"
