@@ -10,7 +10,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-cambiar-en-producci
 
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,.vercel.app').split(',')
 
 # APPS INSTALADAS
 INSTALLED_APPS = [
@@ -124,3 +124,20 @@ PLOTLY_DASH = {
     "ws_route": "ws/channel",
     "insert_demo_migrations": False,
 }
+import dj_database_url
+import os
+
+DEBUG = 'RENDER' not in os.environ and 'VERCEL' not in os.environ
+
+ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost']
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
+        conn_max_age=600
+    )
+}
+
+STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
