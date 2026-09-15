@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Analítico - HealthGuard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+        <div>
+            <h2 class="text-white fw-bold mb-1">Panel Analítico de Salud</h2>
+            <p class="text-muted mb-0">Visualización interactiva de signos vitales e indicadores biométricos</p>
+        </div>
+        <a href="{% url 'health_records:create' %}" class="btn btn-info text-white fw-bold px-3 py-2">
+            + Nuevo Registro Médico
+        </a>
+    </div>
+
+    <!-- Métricas del resumen -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary text-white shadow-sm p-3">
+                <span class="text-muted text-uppercase small fw-bold">Lecturas en el Rango</span>
+                <div class="display-6 fw-bold text-primary mt-2">{{ total_records }}</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary text-white shadow-sm p-3">
+                <span class="text-muted text-uppercase small fw-bold">Última Presión Arterial</span>
+                <div class="display-6 fw-bold text-info mt-2">
+                    {{ latest_bp }} <small class="fs-6 text-muted">mmHg</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary text-white shadow-sm p-3">
+                <span class="text-muted text-uppercase small fw-bold">Último IMC Calculado</span>
+                <div class="display-6 fw-bold text-success mt-2">{{ latest_bmi }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico nativo con Plotly.js y Filtros -->
+    <div class="card bg-dark border-secondary text-white shadow p-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+            <!-- Selección de Métrica -->
+            <div class="d-flex align-items-center gap-2">
+                <label for="metric-select" class="form-label text-muted fw-bold mb-0">Métrica:</label>
+                <select id="metric-select" class="form-select bg-dark text-white border-secondary w-auto" onchange="updateChart(this.value)">
+                    <option value="bp" selected>Presión Arterial</option>
+                    <option value="hr">Frecuencia Cardíaca</option>
+                    <option value="glucose">Glucosa en Sangre</option>
+                    <option value="bmi">Índice de Masa Corporal (IMC)</option>
+                </select>
+            </div>
+
+            <!-- Botones de Rango de Fechas -->
+            <div class="btn-group" role="group" aria-label="Filtro de fechas">
+                <a href="?range=7d" class="btn btn-sm btn-outline-info {% if selected_range == '7d' %}active fw-bold{% endif %}">7 Días</a>
+                <a href="?range=30d" class="btn btn-sm btn-outline-info {% if selected_range == '30d' %}active fw-bold{% endif %}">30 Días</a>
+                <a href="?range=90d" class="btn btn-sm btn-outline-info {% if selected_range == '90d' %}active fw-bold{% endif %}">90 Días</a>
+                <a href="?range=all" class="btn btn-sm btn-outline-info {% if selected_range == 'all' or not selected_range %}active fw-bold{% endif %}">Todo</a>
+            </div>
+        </div>
+
+        <div id="plotly-chart" style="min-height: 420px; width: 100%;"></div>
+    </div>
+</div>
+
+<!-- Render de datos seguro para JS -->
+{{ chart_data|json_script:"chart-data" }}
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+
+    const baseLayout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#a0aec0' },
+        xaxis: { gridcolor: '#2d3748', zerolinecolor: '#2d3748', tickfont: { color: '#a0aec0' } },
+        yaxis: { gridcolor: '#2d3748', zerolinecolor: '#2d3748', tickfont: { color: '#a0aec0' } },
+        margin: { l: 40, r: 30, t: 40, b: 40 },
+        legend: { font: { color: '#ffffff' } },
+        responsive: true
+    };
+
+    function updateChart(metric) {
+        let traces = [];
+        let titleText = '';
+
+        if (chartData.dates.length === 0) {
+            Plotly.newPlot('plotly-chart', [], {
+                ...baseLayout,
+                annotations: [{
+                    text: 'No hay registros en el rango seleccionado',
+                    xref: 'paper', yref: 'paper',
+                    showarrow: false,
+                    font: { size: 16, color: '#a0aec0' }
+                }]
+            }, { displayModeBar: false, responsive: true });
+            return;
+        }
+
+        if (metric === 'bp') {
+            traces = [
+                { x: chartData.dates, y: chartData.systolic, mode: 'lines+markers', name: 'Sistólica', line: { color: '#00d2ff', width: 3 }, marker: { size: 8 } },
+                { x: chartData.dates, y: chartData.diastolic, mode: 'lines+markers', name: 'Diastólica', line: { color: '#00f2fe', width: 3 }, marker: { size: 8 } }
+            ];
+            titleText = 'Evolución de Presión Arterial (mmHg)';
+        } else if (metric === 'hr') {
+            traces = [
+                { x: chartData.dates, y: chartData.heart_rate, mode: 'lines+markers', name: 'Ritmo Cardíaco', line: { color: '#ff4b1f', width: 3 }, marker: { size: 8 } }
+            ];
+            titleText = 'Evolución de Frecuencia Cardíaca (BPM)';
+        } else if (metric === 'glucose') {
+            traces = [
+                { x: chartData.dates, y: chartData.glucose, mode: 'lines+markers', name: 'Glucosa', line: { color: '#f8b500', width: 3 }, marker: { size: 8 } }
+            ];
+            titleText = 'Evolución de Glucosa en Sangre (mg/dL)';
+        } else if (metric === 'bmi') {
+            traces = [
+                { x: chartData.dates, y: chartData.bmi, mode: 'lines+markers', name: 'IMC', line: { color: '#11998e', width: 3 }, marker: { size: 8 } }
+            ];
+            titleText = 'Evolución del Índice de Masa Corporal (IMC)';
+        }
+
+        const layout = { ...baseLayout, title: { text: titleText, font: { color: '#ffffff', size: 16 } } };
+        Plotly.newPlot('plotly-chart', traces, layout, { displayModeBar: false, responsive: true });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateChart('bp');
+    });
+</script>
+{% endblock %}

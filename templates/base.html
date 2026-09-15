@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HealthGuard - Gestión Médica{% endblock %}</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="h-full text-slate-100 font-sans flex flex-col">
+
+    <!-- NAV BAR -->
+    <nav class="bg-slate-900 border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <span class="text-cyan-500 text-2xl"><i class="fa-solid fa-heart-pulse"></i></span>
+                    <span class="font-bold text-lg tracking-wider text-slate-100">HEALTH<span class="text-cyan-500">GUARD</span></span>
+                </div>
+                {% if user.is_authenticated %}
+                <div class="flex items-center space-x-6 text-sm">
+                    <a href="{% url 'analytics:dashboard' %}" class="hover:text-cyan-400 font-medium"><i class="fa-solid fa-chart-line mr-1"></i> Dashboard</a>
+                    <a href="{% url 'health_records:list' %}" class="hover:text-cyan-400 font-medium"><i class="fa-solid fa-file-medical mr-1"></i> Expediente</a>
+                    <div class="border-l border-slate-700 h-5"></div>
+                    <span class="text-slate-400">{{ user.get_full_name }}</span>
+                    <a href="{% url 'authentication:logout' %}" class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-3 py-1.5 rounded-lg hover:bg-rose-500/20"><i class="fa-solid fa-right-from-bracket mr-1"></i> Salir</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-6 p-4 rounded-lg text-sm bg-cyan-900/40 border border-cyan-500/30 text-cyan-300">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Expediente Médico - HealthGuard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mb-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="text-white fw-bold mb-1">Expediente Médico</h2>
+            <p class="text-muted mb-0">Histórico completo de lecturas cargadas con análisis de riesgo</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'health_records:export_csv' %}" class="btn btn-outline-info btn-sm fw-semibold">
+                📊 CSV
+            </a>
+            <a href="{% url 'health_records:export_pdf' %}" class="btn btn-outline-danger btn-sm fw-semibold">
+                📄 PDF
+            </a>
+            <a href="{% url 'health_records:create' %}" class="btn btn-primary fw-bold">
+                + Nuevo Registro
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow border-secondary bg-dark text-white">
+        <div class="card-body p-0">
+            {% if records %}
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle">
+                        <thead>
+                            <tr class="text-muted small text-uppercase">
+                                <th>Fecha</th>
+                                <th>Presión (mmHg)</th>
+                                <th>Ritmo (BPM)</th>
+                                <th>Glucosa (mg/dL)</th>
+                                <th>Peso (kg)</th>
+                                <th>IMC</th>
+                                <th>Notas</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in records %}
+                            <tr>
+                                <td class="fw-bold text-nowrap">{{ r.recorded_at|date:"d/m/Y H:i" }}</td>
+                                
+                                <!-- Presión Arterial con Alerta -->
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="fs-6 fw-semibold">{{ r.systolic_bp }}/{{ r.diastolic_bp }}</span>
+                                        <span class="badge {{ r.bp_status.class }}">{{ r.bp_status.label }}</span>
+                                    </div>
+                                </td>
+
+                                <td>{{ r.heart_rate }}</td>
+
+                                <!-- Glucosa con Alerta -->
+                                <td>
+                                    {% if r.blood_glucose %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span>{{ r.blood_glucose }}</span>
+                                            <span class="badge {{ r.glucose_status.class }}">{{ r.glucose_status.label }}</span>
+                                        </div>
+                                    {% else %}
+                                        <span class="text-muted">--</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{% if r.weight_kg %}{{ r.weight_kg }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                                <td>{% if r.bmi %}{{ r.bmi|floatformat:2 }}{% else %}<span class="text-muted">--</span>{% endif %}</td>
+                                <td><small class="text-muted">{{ r.notes|default:"-" }}</small></td>
+                                <td class="text-end pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'health_records:update' r.pk %}" class="btn btn-outline-warning">Editar</a>
+                                        <a href="{% url 'health_records:delete' r.pk %}" class="btn btn-outline-danger">Eliminar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-5 text-center text-muted">
+                    <p class="mb-0 fs-5">No hay registros médicos cargados aún.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
