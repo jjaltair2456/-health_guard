@@ -1,10 +1,11 @@
-asgiref==3.12.1
+﻿asgiref==3.12.1
 dash==4.4.1
 dash-bootstrap-components==2.0.4
 dj-database-url==3.1.2
 Django==6.1.1
 django-plotly-dash==2.5.1
+django-widget-tweaks==1.5.0
 gunicorn==26.2.0
 psycopg2-binary==2.9.13
 python-dotenv==1.2.3
-whitenoise==6.12.0django-widget-tweaks==1.5.0
+whitenoise==6.12.0
